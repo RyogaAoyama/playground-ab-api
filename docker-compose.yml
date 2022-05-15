@@ -1,0 +1,76 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: omochi
+      MYSQL_USER: test
+      MYSQL_PASSWORD: password
+      TZ: 'Asia/Tokyo'
+    ports:
+      - "3306:3306"
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+  test_db:
+    image: mysql:5.7
+    volumes:
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: omochi
+      MYSQL_USER: test
+      MYSQL_PASSWORD: password
+      TZ: 'Asia/Tokyo'
+    ports:
+      - "3308:3306"
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+  api:
+    build: .
+    volumes:
+      - .:/usr/src/app
+    environment:
+      ENV_PARAMS: ${ENV_PARAMS}
+      PYTHONUNBUFFERED: 1
+    command: "bash sh/wait-for-it.sh 'sh/api-run.sh'"
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    links:
+      - db
+  worker:
+      build: .
+      command: bash sh/wait-for-it.sh 'celery -A app.celery_app.celery worker -l info'
+      volumes:
+          - .:/usr/src/app
+      environment:
+        ENV_PARAMS: ${ENV_PARAMS}
+      depends_on:
+          - api
+          - db
+  beat:
+      build: .
+      command: celery -A app.celery_app.celery beat -l info
+      volumes:
+          - .:/usr/src/app
+      depends_on:
+          - api
+          - db
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    user: root
+    command: -jar DynamoDBLocal.jar -sharedDb -port 8002
+    ports:
+      - 8002:8002
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    environment:
+      - DYNAMO_ENDPOINT=dynamodb-local:8002
+    ports:
+      - 8001:8001
+    depends_on:
+      - dynamodb-local
