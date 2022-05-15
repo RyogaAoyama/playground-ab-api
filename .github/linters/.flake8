@@ -1,6 +1,0 @@
-[flake8]
-max-line-length = 100
-exclude = 
-    const_params.py
-    __init__.py
-ignore = E203, E711, W503, W504, F722, E501
