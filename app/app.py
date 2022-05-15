@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse
 
 from app.apis.v1 import (
     health_check,
