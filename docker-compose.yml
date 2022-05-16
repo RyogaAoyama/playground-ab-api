@@ -3,7 +3,8 @@ services:
   api:
     build: .
     volumes:
-      - .:/usr/src/app
+      - .:/usr/src
+      - ${HOME}/.aws:/root/.aws
     environment:
       PYTHONUNBUFFERED: 1
     command: "uvicorn app.app:app --reload --log-level debug --host 0.0.0.0 --port 8000"
