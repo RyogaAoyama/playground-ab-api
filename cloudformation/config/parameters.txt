@@ -1,0 +1,4 @@
+export SYSTEM_NAME=playground
+export SERVICE_NAME=ab-api
+export APPLICATION_STACK_NAME=${SYSTEM_NAME}-${SERVICE_NAME}-application
+export SECURITY_STACK_NAME=${SYSTEM_NAME}-${SERVICE_NAME}-security
