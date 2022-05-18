@@ -20,6 +20,9 @@ Parameters:
   SystemName:
     Type: String
     Description: システム名
+  ServiceName:
+    Type: String
+    Description: サービス名
 
   ###############################
   # パラメーター
@@ -27,12 +30,12 @@ Parameters:
   AlbSGName:
     Type: String
     Default: alb
-  EcsSGName:
+  FargateSGName:
     Type: String
-    Default: ecs
-  EcsTaskExecRoleName:
+    Default: fargate
+  FargateTaskExecRoleName:
     Type: String
-    Default: ecs-task-exec
+    Default: fargate-task-exec
   AutoScalingRoleName:
     Type: String
     Default: auto-scaling
@@ -47,3 +50,40 @@ Parameters:
 # リソース
 ###############################
 Resources:
+  ###############################
+  # SecurityGroup
+  ###############################
+  ### AlbSG ###
+  AlbSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${SystemName}-${ServiceName}-${AlbSGName}-${Env}
+      GroupDescription: api alb
+      SecurityGroupIngress:
+        - IpProtocol: -1
+      VpcId:
+        Fn::ImportValue: !Sub ${SystemName}-vpc-id
+      Tags:
+        - Key: Name
+          Value: !Sub ${SystemName}-${ServiceName}-${AlbSGName}-${Env}
+        - Key: System
+          Value: !Ref SystemName
+        - Key: Env
+          Value: !Ref Env
+
+  ### SecurityGroup2 ###
+  SecurityGroup2:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !FindInMap ${SystemName}-${ServiceName}-${FargateSGName}-${Env}
+      GroupDescription: api fargate
+      SecurityGroupIngress:
+        - IpProtocol: -1
+      VpcId: !FindInMap [Vpc, VpcId1, !Ref Env]
+      Tags:
+        - Key: Name
+          Value: !Sub ${SystemName}-${ServiceName}-${FargateSGName}-${Env}
+        - Key: System
+          Value: !Ref SystemName
+        - Key: Env
+          Value: !Ref Env

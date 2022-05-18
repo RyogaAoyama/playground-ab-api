@@ -17,4 +17,4 @@ TEMPLATE_PATH='./cloudformation/Securities.yml'
 . ./cloudformation/config/parameters.txt
 
 # デプロイ
-rain deploy ${TEMPLATE_PATH} ${SECURITY_STACK_NAME} -y -p ${PROFILE} --params Env=${ENV},SystemName=${SYSTEM_NAME}
+rain deploy ${TEMPLATE_PATH} ${SECURITY_STACK_NAME} -y -p ${PROFILE} --params Env=${ENV},SystemName=${SYSTEM_NAME},ServiceName=${SERVICE_NAME}
