@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: playground ab api securities
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "default"
+        Parameters:
+          - Env
+Parameters:
+  ###############################
+  # 外部からのパラメーター
+  ###############################
+  Env:
+    Type: String
+    Description: 環境種別
+  SystemName:
+    Type: String
+    Description: システム名
+
+  ###############################
+  # パラメーター
+  ###############################
+  AlbSGName:
+    Type: String
+    Default: alb
+  EcsSGName:
+    Type: String
+    Default: ecs
+  EcsTaskExecRoleName:
+    Type: String
+    Default: ecs-task-exec
+  AutoScalingRoleName:
+    Type: String
+    Default: auto-scaling
+  ScaleOutPolicyName:
+    Type: String
+    Default: scale-out
+  ScaleInPolicyName:
+    Type: String
+    Default: scale-in
+
+###############################
+# リソース
+###############################
+Resources:
