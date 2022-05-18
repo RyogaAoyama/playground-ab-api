@@ -30,13 +30,16 @@ Parameters:
   AlbSGName:
     Type: String
     Default: alb
-  FargateSGName:
+  EcsSGName:
     Type: String
-    Default: fargate
-  FargateTaskExecRoleName:
+    Default: ecs
+  EcsTaskExecRoleName:
     Type: String
-    Default: fargate-task-exec
+    Default: ecs-task-exec
   AutoScalingRoleName:
+    Type: String
+    Default: auto-scaling
+  AutoScalingPolicyName:
     Type: String
     Default: auto-scaling
   ScaleOutPolicyName:
@@ -71,19 +74,64 @@ Resources:
         - Key: Env
           Value: !Ref Env
 
-  ### SecurityGroup2 ###
-  SecurityGroup2:
+  ### EcsSG ###
+  EcsSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !FindInMap ${SystemName}-${ServiceName}-${FargateSGName}-${Env}
-      GroupDescription: api fargate
+      GroupName: !Sub ${SystemName}-${ServiceName}-${EcsSGName}-${Env}
+      GroupDescription: api ecs
       SecurityGroupIngress:
         - IpProtocol: -1
-      VpcId: !FindInMap [Vpc, VpcId1, !Ref Env]
+      VpcId:
+        Fn::ImportValue: !Sub ${SystemName}-vpc-id
       Tags:
         - Key: Name
-          Value: !Sub ${SystemName}-${ServiceName}-${FargateSGName}-${Env}
+          Value: !Sub ${SystemName}-${ServiceName}-${EcsSGName}-${Env}
         - Key: System
           Value: !Ref SystemName
         - Key: Env
           Value: !Ref Env
+
+  ###############################
+  # Role
+  ###############################
+  ### EcsTaskExecutionRole ###
+  EcsTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref EcsTaskExecRoleName
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ### ServiceAutoScalingRole ###
+  ServiceAutoScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}-${ServiceName}-${AutoScalingRoleName}-${Env}
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: application-autoscaling.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: !Sub ${SystemName}-${ServiceName}-${AutoScalingPolicyName}-${Env}
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - application-autoscaling:*
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:PutMetricAlarm
+                  - ecs:DescribeServices
+                  - ecs:UpdateService
+                Resource: '*'
