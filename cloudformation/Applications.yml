@@ -33,7 +33,7 @@ Parameters:
     Default: arr-playground.com
   HostedZoneName:
     Type: String
-    arr-playground.com
+    Default: arr-playground.com
 
 ###############################
 # リソース
