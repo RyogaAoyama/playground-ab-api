@@ -99,7 +99,7 @@ Resources:
   EcsTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Ref EcsTaskExecRoleName
+      RoleName: !Sub ${SystemName}-${ServiceName}-${EcsTaskExecRoleName}-${Env}
       Path: /
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -135,3 +135,24 @@ Resources:
                   - ecs:DescribeServices
                   - ecs:UpdateService
                 Resource: '*'
+
+###############################
+# 出力
+###############################
+Outputs:
+  AlbSGId:
+    Value: !Ref AlbSG
+    Export:
+      Name: !Sub ${SystemName}-${ServiceName}-${AlbSGName}-id
+  EcsSGId:
+    Value: !Ref EcsSG
+    Export:
+      Name: !Sub ${SystemName}-${ServiceName}-${EcsSGName}-id
+  EcsTaskExecutionRoleArn:
+    Value: !GetAtt EcsTaskExecutionRole.Arn
+    Export:
+      Name: !Sub ${SystemName}-${ServiceName}-${EcsTaskExecRoleName}-arn
+  ServiceAutoScalingRoleArn:
+    Value: !GetAtt ServiceAutoScalingRole.Arn
+    Export:
+      Name: !Sub ${SystemName}-${ServiceName}-${AutoScalingRoleName}-arn
