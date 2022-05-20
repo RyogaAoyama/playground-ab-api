@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: playground ab api applications
+
+Parameters:
+  ###############################
+  # 外部からのパラメーター
+  ###############################
+  Env:
+    Type: String
+    Description: 環境種別
+  SystemName:
+    Type: String
+    Description: システム名
+  ServiceName:
+    Type: String
+    Description: サービス名
+
+  ###############################
+  # パラメーター
+  ###############################
+  AlbName:
+    Type: String
+    Default: alb
+  TargetGroupName:
+    Type: String
+    Default: tg
+  EcrName:
+    Type: String
+    Default: ecr
+  DomainName:
+    Type: String
+    Default: arr-playground.com
+  HostedZoneName:
+    Type: String
+    arr-playground.com
+
+###############################
+# リソース
+###############################
+Resources:
+  ###############################
+  # ALB
+  ###############################
+  ### TargetGroup ###
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub ${SystemName}-vpc-id
+      Name: !FindInMap [TargetGroup, Name, !Ref Env]
+      Protocol: HTTP
+      Port: 5000
+      TargetType: ip
+      HealthCheckPath: !FindInMap [TargetGroup, HealthCheck, !Ref Env]
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      HealthCheckTimeoutSeconds: 5
+      HealthCheckIntervalSeconds: 30
+      Matcher: 
+        HttpCode: '200'
+      TargetGroupAttributes: 
+        - Key: deregistration_delay.timeout_seconds
+          Value: '300'
+        - Key: stickiness.enabled
+          Value: 'false'
+        - Key: load_balancing.algorithm.type
+          Value: round_robin
+        - Key: slow_start.duration_seconds
+          Value: '0'
+###############################
+# 出力
+###############################
+Outputs:
+  AlbSGId:
+    Value: !Ref AlbSG
+    Export:
+      Name: !Sub ${SystemName}-${ServiceName}-${AlbSGName}-id
